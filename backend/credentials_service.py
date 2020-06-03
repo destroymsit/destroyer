@@ -10,6 +10,9 @@ from google.auth.transport.requests import Request
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 
 
+# colorId = 3 == student
+# colorId = 4 == mentor
+
 def get_credentials():
 
     # The file token.pickle stores the user's access and refresh tokens, and is
@@ -41,8 +44,7 @@ def create_service(creds):
 def get_events(service):
     # now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
     events_result = service.events().list(calendarId='primary',
-                                          singleEvents=True,
-                                          orderBy='startTime').execute()
+                                          ).execute()
     events = events_result.get('items', [])
     return events
 
@@ -64,14 +66,12 @@ def colored_events(service, colorId):
 
 
 def conflict_events(service, cur_event):
-    events = colored_events(service, "4")
+    events = colored_events(service, "3")
     cur_event = json.loads(cur_event)
-
     for event in events:
         dc = date_conflict(event, cur_event)
         ac = attendees_conflict(event, cur_event)
-        print(dc, ac)
-        if dc:
+        if dc and ac:
             return True
     return False
 
@@ -106,27 +106,35 @@ def attendees_conflict(event, cur_event):
     return False
 
 
-def format_data(data):
-    print(data.content_type)
-    pass
+def events_by_email(service, email_id):
+    all_events = get_events(service)
+    my_events = []
+    for event in all_events:
+        if "attendees" in event:
+            attendees = event['attendees']
+            for att in attendees:
+                if email_id == att['email']:
+                    my_events.append(event)
+    return my_events
 
 
 creds = get_credentials()
 service = create_service(creds)
 
 if __name__ == '__main__':
-    creds = get_credentials()
-    service = create_service(creds)
-    event = {
-        'summary': 'with me the god',
-        'location': 'heaven',
-        'description': 'with me the god',
-        'start': {
-            'dateTime': '2020-06-01T01:30:00+05:30',
-        },
-        'end': {
-            'dateTime': '2020-06-30T02:30:00+05:30',
-        }
-    }
+    pass
+    # creds = get_credentials()
+    # service = create_service(creds)
+    # event = {
+    #     'summary': 'with me the god',
+    #     'location': 'heaven',
+    #     'description': 'with me the god',
+    #     'start': {
+    #         'dateTime': '2020-06-01T01:30:00+05:30',
+    #     },
+    #     'end': {
+    #         'dateTime': '2020-06-30T02:30:00+05:30',
+    #     }
+    # }
     # create_event(service,event)
-    get_events(service)
+    # get_events(service)
